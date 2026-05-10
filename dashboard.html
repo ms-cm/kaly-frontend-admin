@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - KALY</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>🪡 KALY Admin</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" onclick="showSection('products')">
+                    <i class="fas fa-box"></i> Produits
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('add-product')">
+                    <i class="fas fa-plus"></i> Ajouter Produit
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('promo')">
+                    <i class="fas fa-tag"></i> Codes Promo
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('stats')">
+                    <i class="fas fa-chart-bar"></i> Statistiques
+                </a>
+                <a href="../index.html" class="nav-item" target="_blank">
+                    <i class="fas fa-external-link-alt"></i> Voir le Site
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="admin-header">
+                <h1 id="page-title">Gestion des Produits</h1>
+            </header>
+
+            <!-- Products Section -->
+            <section id="products-section" class="content-section">
+                <div class="section-header">
+                    <h2>Liste des Produits</h2>
+                    <button class="btn btn-primary" onclick="showSection('add-product')">
+                        <i class="fas fa-plus"></i> Nouveau Produit
+                    </button>
+                </div>
+                
+                <div class="products-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Nom</th>
+                                <th>Catégorie</th>
+                                <th>Prix</th>
+                                <th>Stock</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-list">
+                            <tr><td colspan="6" style="text-align:center;">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Add Product Section -->
+            <section id="add-product-section" class="content-section" style="display: none;">
+                <div class="section-header">
+                    <h2 id="form-title">Ajouter un Produit</h2>
+                </div>
+                
+                <form id="product-form" class="product-form">
+                    <input type="hidden" id="product-id">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nom du Produit *</label>
+                            <input type="text" id="product-name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Prix (FCFA) *</label>
+                            <input type="number" id="product-price" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Catégorie *</label>
+                            <select id="product-category" required>
+                                <option value="">Sélectionner...</option>
+                                <option value="vetements">Vêtements</option>
+                                <option value="sacs">Sacs</option>
+                                <option value="chaussures">Chaussures</option>
+                                <option value="accessoires">Accessoires</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Stock *</label>
+                            <input type="number" id="product-stock" value="0" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="product-description" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tailles (séparées par virgule)</label>
+                            <input type="text" id="product-sizes" placeholder="S, M, L, XL">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Couleurs (séparées par virgule)</label>
+                            <input type="text" id="product-colors" placeholder="Rouge, Bleu, Noir">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="product-featured">
+                            Produit Vedette
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Images du Produit * (Sélectionnez depuis votre galerie)</label>
+                        <input type="file" id="product-images" multiple accept="image/*" onchange="previewImages()">
+                        <small>Vous pouvez sélectionner plusieurs images</small>
+                        <div id="image-preview" class="image-preview"></div>
+                        <div id="uploaded-images" class="uploaded-images"></div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Enregistrer
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelEdit()">
+                            Annuler
+                        </button>
+                    </div>
+                    
+                    <div id="form-message" class="form-message"></div>
+                </form>
+            </section>
+
+            <!-- Promo Section -->
+            <section id="promo-section" class="content-section" style="display: none;">
+                <div class="section-header">
+                    <h2>Codes Promo</h2>
+                </div>
+                
+                <div class="promo-form-card">
+                    <h3>Créer un Code Promo</h3>
+                    <form id="promo-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Code *</label>
+                                <input type="text" id="promo-code" placeholder="PROMO20" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Réduction (%) *</label>
+                                <input type="number" id="promo-discount" min="1" max="100" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Date d'Expiration</label>
+                            <input type="date" id="promo-expires">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Créer Code Promo
+                        </button>
+                        
+                        <div id="promo-message" class="form-message"></div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Stats Section -->
+            <section id="stats-section" class="content-section" style="display: none;">
+                <div class="section-header">
+                    <h2>Statistiques</h2>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-box"></i>
+                        <h3 id="total-products">0</h3>
+                        <p>Produits</p>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <i class="fas fa-check-circle"></i>
+                        <h3 id="in-stock">0</h3>
+                        <p>En Stock</p>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <i class="fas fa-times-circle"></i>
+                        <h3 id="out-stock">0</h3>
+                        <p>Rupture</p>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <i class="fas fa-star"></i>
+                        <h3 id="featured-count">0</h3>
+                        <p>Vedettes</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
