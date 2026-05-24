@@ -1,56 +1,371 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - KALY</title>
-    <link rel="stylesheet" href="css/admin.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KALY — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #141414;
+      --border: #2a2a2a;
+      --gold: #c9a84c;
+      --gold-dim: #7a6230;
+      --text: #e8e0d0;
+      --muted: #5a5244;
+      --error: #c0392b;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Animated background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      animation: gridDrift 20s linear infinite;
+      z-index: 0;
+    }
+
+    @keyframes gridDrift {
+      from { transform: translateY(0); }
+      to   { transform: translateY(48px); }
+    }
+
+    .glow-orb {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+      animation: pulse 6s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+      50%       { opacity: 1;   transform: translate(-50%, -50%) scale(1.1); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 420px;
+      padding: 0 24px;
+      animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 48px 40px;
+      position: relative;
+    }
+
+    /* Corner accents */
+    .card::before, .card::after,
+    .card-corner-bl, .card-corner-tr {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-color: var(--gold);
+      border-style: solid;
+    }
+    .card::before  { top: -1px;    left: -1px;  border-width: 2px 0 0 2px; }
+    .card::after   { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+    .card-corner-bl { bottom: -1px; left: -1px;  border-width: 0 0 2px 2px; }
+    .card-corner-tr { top: -1px;   right: -1px;  border-width: 2px 2px 0 0; }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 42px;
+      font-weight: 300;
+      letter-spacing: 0.25em;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .tagline {
+      font-size: 10px;
+      letter-spacing: 0.35em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .divider {
+      width: 48px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+      margin: 20px auto;
+    }
+
+    label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .input-wrap {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      padding: 14px 48px 14px 16px;
+      outline: none;
+      transition: border-color 0.2s;
+      letter-spacing: 0.05em;
+    }
+
+    input:focus {
+      border-color: var(--gold-dim);
+    }
+
+    input::placeholder {
+      color: var(--muted);
+    }
+
+    .eye-btn {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 4px;
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+    }
+
+    .eye-btn:hover { color: var(--gold); }
+
+    .btn {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--gold-dim);
+      color: var(--gold);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--gold);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      z-index: 0;
+    }
+
+    .btn:hover::before  { transform: scaleX(1); }
+    .btn:hover { color: var(--bg); border-color: var(--gold); }
+
+    .btn span { position: relative; z-index: 1; }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn:disabled::before { display: none; }
+
+    .error-msg {
+      background: rgba(192,57,43,0.1);
+      border: 1px solid rgba(192,57,43,0.3);
+      color: #e74c3c;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      padding: 10px 14px;
+      margin-bottom: 20px;
+      display: none;
+      animation: shake 0.35s cubic-bezier(0.36,0.07,0.19,0.97);
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%       { transform: translateX(-6px); }
+      60%       { transform: translateX(6px); }
+      80%       { transform: translateX(-3px); }
+    }
+
+    .error-msg.visible { display: block; }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid transparent;
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 28px;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+  </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-box">
-            <h1>🪡 KALY Admin</h1>
-            <p>Connexion administrateur</p>
-            
-            <form id="login-form">
-                <div class="form-group">
-                    <input type="password" id="password" placeholder="Mot de passe admin" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Se Connecter</button>
-                <div id="error-message" class="error-message"></div>
-            </form>
-        </div>
-    </div>
+  <div class="glow-orb"></div>
 
-    <script>
-        // IMPORTANT: Remplacez par votre URL backend
-        const API_URL = 'https://kaly-backend.onrender.com/api';
-        
-        document.getElementById('login-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const password = document.getElementById('password').value;
-            const errorMsg = document.getElementById('error-message');
-            
-            try {
-                // Test connection avec le mot de passe
-                const response = await fetch(`${API_URL}/products`, {
-                    headers: {
-                        'password': password
-                    }
-                });
-                
-                if (response.ok) {
-                    localStorage.setItem('kaly_admin_password', password);
-                    window.location.href = 'dashboard.html';
-                } else {
-                    errorMsg.textContent = '❌ Mot de passe incorrect';
-                }
-            } catch (error) {
-                errorMsg.textContent = '❌ Erreur de connexion au serveur';
-                console.error('Error:', error);
-            }
+  <div class="container">
+    <div class="card">
+      <div class="card-corner-bl"></div>
+      <div class="card-corner-tr"></div>
+
+      <div class="header">
+        <div class="logo">KALY</div>
+        <div class="tagline">Panneau d'administration</div>
+        <div class="divider"></div>
+      </div>
+
+      <div id="errorMsg" class="error-msg"></div>
+
+      <div class="input-wrap">
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" placeholder="••••••••••••" autocomplete="current-password" />
+        <button class="eye-btn" id="eyeBtn" type="button" aria-label="Afficher le mot de passe">
+          <svg id="eyeIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+
+      <button class="btn" id="loginBtn" type="button">
+        <span id="btnText">Accéder</span>
+      </button>
+
+      <div class="footer-note">Session valide 8 heures</div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://kaly-backend.onrender.com'; // adapte si besoin
+
+    const passwordInput = document.getElementById('password');
+    const loginBtn      = document.getElementById('loginBtn');
+    const btnText       = document.getElementById('btnText');
+    const errorMsg      = document.getElementById('errorMsg');
+    const eyeBtn        = document.getElementById('eyeBtn');
+    const eyeIcon       = document.getElementById('eyeIcon');
+
+    // Toggle password visibility
+    eyeBtn.addEventListener('click', () => {
+      const isHidden = passwordInput.type === 'password';
+      passwordInput.type = isHidden ? 'text' : 'password';
+      eyeIcon.innerHTML = isHidden
+        ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+           <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+           <line x1="1" y1="1" x2="23" y2="23"/>`
+        : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+    });
+
+    // Login
+    async function login() {
+      const password = passwordInput.value.trim();
+      if (!password) return;
+
+      errorMsg.classList.remove('visible');
+      loginBtn.disabled = true;
+      btnText.innerHTML = '<span class="spinner"></span>Vérification...';
+
+      try {
+        const res = await fetch(`${API_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
         });
-    </script>
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || 'Erreur d\'authentification');
+
+        // Stocke le token
+        localStorage.setItem('kaly_admin_token', data.token);
+
+        // Redirige vers le dashboard
+        window.location.href = '/admin/dashboard.html';
+
+      } catch (err) {
+        errorMsg.textContent = err.message;
+        errorMsg.classList.add('visible');
+        passwordInput.value = '';
+        passwordInput.focus();
+      } finally {
+        loginBtn.disabled = false;
+        btnText.textContent = 'Accéder';
+      }
+    }
+
+    loginBtn.addEventListener('click', login);
+    passwordInput.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
+    // Redirige si déjà connecté
+    const existingToken = localStorage.getItem('kaly_admin_token');
+    if (existingToken) window.location.href = '/admin/dashboard.html';
+  </script>
 </body>
 </html>
