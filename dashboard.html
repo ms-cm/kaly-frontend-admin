@@ -4,35 +4,112 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin - KALY</title>
-    <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- DESIGN DE BASE RESPONSIVE --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: sans-serif; background: #f1f5f9; color: #334155; }
+        
+        .admin-layout { display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* --- SIDEBAR MODE MOBILE (Barre horizontale en haut) --- */
+        .sidebar { background: #0f172a; color: white; padding: 15px; width: 100%; }
+        .logo h2 { font-size: 1.4rem; text-align: center; margin-bottom: 10px; }
+        
+        .sidebar-nav { 
+            display: flex; 
+            overflow-x: auto; /* Permet de défiler les boutons de gauche à droite sur mobile */
+            white-space: nowrap;
+            padding-bottom: 5px;
+            gap: 10px;
+        }
+        .sidebar-nav::-webkit-scrollbar { height: 4px; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .nav-item { 
+            display: inline-flex; 
+            align-items: center; 
+            color: #94a3b8; 
+            padding: 8px 16px; 
+            text-decoration: none; 
+            border-radius: 20px; 
+            font-size: 0.9rem;
+            background: #1e293b;
+        }
+        .nav-item i { margin-right: 8px; }
+        .nav-item.active, .nav-item:hover { background: #deff9a; color: #0f172a; font-weight: bold; }
+
+        /* --- CONTENU PRINCIPAL --- */
+        .main-content { flex: 1; padding: 15px; width: 100%; }
+        .admin-header { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .admin-header h1 { font-size: 1.5rem; color: #0f172a; }
+
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; }
+        .section-header h2 { font-size: 1.2rem; }
+
+        /* --- BOUTONS --- */
+        .btn { padding: 10px 16px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .btn-primary { background: #deff9a; color: #0f172a; }
+        .btn-secondary { background: #cbd5e1; color: #334155; }
+
+        /* --- TABLEAUX RESPONSIVE (Défilement horizontal pour éviter les bugs) --- */
+        .table-responsive { width: 100%; overflow-x: auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; /* Force une largeur minimale interne pour garder le tableau propre */ }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+        th { background: #0f172a; color: white; }
+
+        /* --- FORMULAIRES --- */
+        .product-form { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .form-row { display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; }
+        .form-group { display: flex; flex-direction: column; width: 100%; }
+        .form-group label { margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
+        .form-group input, .form-group select, .form-group textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; width: 100%; }
+        .form-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+        /* --- BADGES & STATS --- */
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; display: inline-block; }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .stat-card { background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .stat-card i { font-size: 1.5rem; color: #0f172a; margin-bottom: 8px; }
+        .stat-card h3 { font-size: 1.2rem; }
+        .stat-card p { font-size: 0.8rem; color: #64748b; }
+
+        /* --- RESPONSIVE GRANDS ÉCRANS (ORDINATEURS) --- */
+        @media (min-width: 768px) {
+            .admin-layout { flex-direction: row; }
+            .sidebar { width: 260px; height: 100vh; position: fixed; top: 0; left: 0; padding: 25px; }
+            .logo h2 { text-align: left; margin-bottom: 30px; }
+            .sidebar-nav { flex-direction: column; overflow-x: visible; white-space: normal; }
+            .nav-item { display: flex; width: 100%; border-radius: 8px; padding: 12px; background: transparent; }
+            .main-content { margin-left: 260px; padding: 30px; }
+            .form-row { flex-direction: row; }
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+            .admin-header h1 { font-size: 2rem; }
+        }
+    </style>
 </head>
 <body>
     <div class="admin-layout">
-        <!-- Sidebar -->
+        <!-- Sidebar Navigation (S'adapte automatiquement PC / Mobile) -->
         <aside class="sidebar">
             <div class="logo">
                 <h2>🪡 KALY Admin</h2>
             </div>
             <nav class="sidebar-nav">
-                <a href="#" class="nav-item active" onclick="showSection('products')">
-                    <i class="fas fa-box"></i> Produits
-                </a>
-                <a href="#" class="nav-item" onclick="showSection('add-product')">
-                    <i class="fas fa-plus"></i> Ajouter Produit
-                </a>
-                <a href="#" class="nav-item" onclick="showSection('promo')">
-                    <i class="fas fa-tag"></i> Codes Promo
-                </a>
-                <a href="#" class="nav-item" onclick="showSection('stats')">
-                    <i class="fas fa-chart-bar"></i> Statistiques
-                </a>
-                <a href="../index.html" class="nav-item" target="_blank">
-                    <i class="fas fa-external-link-alt"></i> Voir le Site
-                </a>
-                <a href="#" class="nav-item" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> Déconnexion
-                </a>
+                <a class="nav-item active" onclick="showSection('products')"><i class="fas fa-box"></i>Produits</a>
+                <a class="nav-item" onclick="showSection('add-product')"><i class="fas fa-plus"></i>Ajouter</a>
+                <a class="nav-item" onclick="showSection('orders')"><i class="fas fa-shopping-bag"></i>Commandes</a>
+                <a class="nav-item" onclick="showSection('clients')"><i class="fas fa-users"></i>Clients</a>
+                <a class="nav-item" onclick="showSection('promo')"><i class="fas fa-tag"></i>Promo</a>
+                <a class="nav-item" onclick="showSection('stats')"><i class="fas fa-chart-bar"></i>Stats</a>
+                <a class="nav-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i>Quitter</a>
             </nav>
         </aside>
 
@@ -42,16 +119,13 @@
                 <h1 id="page-title">Gestion des Produits</h1>
             </header>
 
-            <!-- Products Section -->
-            <section id="products-section" class="content-section">
+            <!-- Section Liste Produits -->
+            <section id="products-section" class="content-section active">
                 <div class="section-header">
-                    <h2>Liste des Produits</h2>
-                    <button class="btn btn-primary" onclick="showSection('add-product')">
-                        <i class="fas fa-plus"></i> Nouveau Produit
-                    </button>
+                    <h2>Articles en ligne</h2>
+                    <button class="btn btn-primary" onclick="showSection('add-product')"><i class="fas fa-plus"></i> Nouveau</button>
                 </div>
-                
-                <div class="products-table">
+                <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
@@ -60,7 +134,7 @@
                                 <th>Catégorie</th>
                                 <th>Prix</th>
                                 <th>Stock</th>
-                                <th>Actions</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="products-list">
@@ -70,160 +144,179 @@
                 </div>
             </section>
 
-            <!-- Add Product Section -->
-            <section id="add-product-section" class="content-section" style="display: none;">
-                <div class="section-header">
-                    <h2 id="form-title">Ajouter un Produit</h2>
-                </div>
-                
+            <!-- Section Ajouter Produit -->
+            <section id="add-product-section" class="content-section">
+                <div class="section-header"><h2>Nouveau Vêtement</h2></div>
                 <form id="product-form" class="product-form">
-                    <input type="hidden" id="product-id">
-                    
                     <div class="form-row">
                         <div class="form-group">
                             <label>Nom du Produit *</label>
                             <input type="text" id="product-name" required>
                         </div>
-                        
                         <div class="form-group">
                             <label>Prix (FCFA) *</label>
                             <input type="number" id="product-price" required>
                         </div>
                     </div>
-                    
                     <div class="form-row">
                         <div class="form-group">
                             <label>Catégorie *</label>
                             <select id="product-category" required>
-                                <option value="">Sélectionner...</option>
                                 <option value="vetements">Vêtements</option>
                                 <option value="sacs">Sacs</option>
                                 <option value="chaussures">Chaussures</option>
                                 <option value="accessoires">Accessoires</option>
                             </select>
                         </div>
-                        
                         <div class="form-group">
                             <label>Stock *</label>
-                            <input type="number" id="product-stock" value="0" required>
+                            <input type="number" id="product-stock" value="10" required>
                         </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea id="product-description" rows="4"></textarea>
+                    <div class="form-group" style="margin-bottom:15px;">
+                        <label>Lien de l'image (Cloudinary) *</label>
+                        <input type="text" id="product-image-url" required>
                     </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Tailles (séparées par virgule)</label>
-                            <input type="text" id="product-sizes" placeholder="S, M, L, XL">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Couleurs (séparées par virgule)</label>
-                            <input type="text" id="product-colors" placeholder="Rouge, Bleu, Noir">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="product-featured">
-                            Produit Vedette
-                        </label>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Images du Produit * (Sélectionnez depuis votre galerie)</label>
-                        <input type="file" id="product-images" multiple accept="image/*" onchange="previewImages()">
-                        <small>Vous pouvez sélectionner plusieurs images</small>
-                        <div id="image-preview" class="image-preview"></div>
-                        <div id="uploaded-images" class="uploaded-images"></div>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Enregistrer
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="cancelEdit()">
-                            Annuler
-                        </button>
-                    </div>
-                    
-                    <div id="form-message" class="form-message"></div>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Enregistrer</button>
                 </form>
             </section>
 
-            <!-- Promo Section -->
-            <section id="promo-section" class="content-section" style="display: none;">
-                <div class="section-header">
-                    <h2>Codes Promo</h2>
-                </div>
-                
-                <div class="promo-form-card">
-                    <h3>Créer un Code Promo</h3>
-                    <form id="promo-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Code *</label>
-                                <input type="text" id="promo-code" placeholder="PROMO20" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Réduction (%) *</label>
-                                <input type="number" id="promo-discount" min="1" max="100" required>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Date d'Expiration</label>
-                            <input type="date" id="promo-expires">
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Créer Code Promo
-                        </button>
-                        
-                        <div id="promo-message" class="form-message"></div>
-                    </form>
+            <!-- Section Clients Inscrits -->
+            <section id="clients-section" class="content-section">
+                <div class="section-header"><h2>Clients Enregistrés</h2></div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nom complet</th>
+                                <th>Email</th>
+                                <th>Date d'inscription</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clients-list">
+                            <tr><td colspan="3" style="text-align:center;">Chargement...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </section>
 
-            <!-- Stats Section -->
-            <section id="stats-section" class="content-section" style="display: none;">
-                <div class="section-header">
-                    <h2>Statistiques</h2>
+            <!-- Section Commandes Simulées -->
+            <section id="orders-section" class="content-section">
+                <div class="section-header"><h2>Historique des commandes</h2></div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Date</th>
+                                <th>Montant</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-list">
+                            <tr><td colspan="4" style="text-align:center;">Aucune commande pour le moment.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-                
+            </section>
+
+            <!-- Section Statistiques -->
+            <section id="stats-section" class="content-section">
+                <div class="section-header"><h2>Tableau de bord de suivi</h2></div>
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <i class="fas fa-box"></i>
-                        <h3 id="total-products">0</h3>
-                        <p>Produits</p>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <i class="fas fa-check-circle"></i>
-                        <h3 id="in-stock">0</h3>
-                        <p>En Stock</p>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <i class="fas fa-times-circle"></i>
-                        <h3 id="out-stock">0</h3>
-                        <p>Rupture</p>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <i class="fas fa-star"></i>
-                        <h3 id="featured-count">0</h3>
-                        <p>Vedettes</p>
-                    </div>
+                    <div class="stat-card"><i class="fas fa-box"></i><h3 id="total-products">0</h3><p>Modèles</p></div>
+                    <div class="stat-card"><i class="fas fa-users"></i><h3 id="total-clients">0</h3><p>Abonnés</p></div>
+                    <div class="stat-card"><i class="fas fa-exclamation-circle"></i><h3 id="out-stock">0</h3><p>Ruptures</p></div>
+                    <div class="stat-card"><i class="fas fa-wallet"></i><h3>0 F</h3><p>Chiffre d'Affaire</p></div>
                 </div>
             </section>
         </main>
     </div>
 
-    <script src="js/admin.js"></script>
+    <script>
+        const API_URL = "https://kaly-backend.onrender.com/api";
+        let ADMIN_PASS = localStorage.getItem('kaly_admin_pass') || "";
+
+        if (!ADMIN_PASS) {
+            ADMIN_PASS = prompt("Code secret KALY Admin :");
+            if(ADMIN_PASS) localStorage.setItem('kaly_admin_pass', ADMIN_PASS);
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            
+            document.getElementById(`${sectionId}-section`).classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            if(sectionId === 'products') loadProducts();
+            if(sectionId === 'clients') loadClients();
+            if(sectionId === 'stats') loadStats();
+        }
+
+        async function loadProducts() {
+            try {
+                const res = await fetch(`${API_URL}/products`);
+                const products = await res.json();
+                document.getElementById('products-list').innerHTML = products.map(p => `
+                    <tr>
+                        <td><img src="${p.images ? p.images[0] : p.image}" width="40" height="40" style="border-radius:4px; object-fit:cover;"></td>
+                        <td><strong>${p.name}</strong></td>
+                        <td><span class="badge badge-warning">${p.category}</span></td>
+                        <td>${p.price} F</td>
+                        <td><span class="badge ${p.stock > 0 ? 'badge-success' : 'badge-danger'}">${p.stock || 0} u</span></td>
+                        <td><i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="deleteProduct('${p._id}')"></i></td>
+                    </tr>
+                `).join('');
+            } catch (err) { console.log(err); }
+        }
+
+        async function loadClients() {
+            try {
+                const res = await fetch(`${API_URL}/admin/users`, { headers: { 'password': ADMIN_PASS } });
+                const clients = await res.json();
+                document.getElementById('clients-list').innerHTML = clients.map(c => `
+                    <tr>
+                        <td>👤 ${c.fullName}</td>
+                        <td>${c.email}</td>
+                        <td>${new Date(c.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                `).join('');
+            } catch (err) { console.log(err); }
+        }
+
+        async function loadStats() {
+            try {
+                const resProd = await fetch(`${API_URL}/products`);
+                const prod = await resProd.json();
+                const resCli = await fetch(`${API_URL}/admin/users`, { headers: { 'password': ADMIN_PASS } });
+                const cli = await resCli.json();
+
+                document.getElementById('total-products').innerText = prod.length;
+                document.getElementById('total-clients').innerText = cli.length;
+                document.getElementById('out-stock').innerText = prod.filter(p => !p.stock || p.stock <= 0).length;
+            } catch (err) {}
+        }
+
+        document.getElementById('product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('product-name').value,
+                price: Number(document.getElementById('product-price').value),
+                category: document.getElementById('product-category').value,
+                stock: Number(document.getElementById('product-stock').value),
+                images: [document.getElementById('product-image-url').value]
+            };
+            const res = await fetch(`${API_URL}/products`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'password': ADMIN_PASS },
+                body: JSON.stringify(payload)
+            });
+            if(res.ok) { alert("Ajouté !"); location.reload(); }
+        });
+
+        function logout() { localStorage.removeItem('kaly_admin_pass'); location.reload(); }
+        window.onload = loadProducts;
+    </script>
 </body>
 </html>
