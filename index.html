@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — KALY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--rose:#e8a0b0;--rose-deep:#c9687e;--gold:#c9a84c;--dark:#1a1218;--mid:#2e2129;--white:#fff}
+html,body{height:100%;min-height:100vh}
+body{font-family:'DM Sans',sans-serif;background:var(--dark);display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden}
+body::before{content:'';position:fixed;width:500px;height:500px;background:radial-gradient(circle,rgba(201,104,126,.15) 0%,transparent 70%);top:-150px;right:-150px;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;width:400px;height:400px;background:radial-gradient(circle,rgba(201,168,76,.1) 0%,transparent 70%);bottom:-150px;left:-150px;pointer-events:none;z-index:0}
+.card{width:100%;max-width:380px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:36px 28px;position:relative;z-index:1;animation:up .4s ease}
+@keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.logo-row{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.logo-icon{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--rose-deep),var(--gold));display:flex;align-items:center;justify-content:center;font-size:19px}
+.logo-text{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:var(--white)}
+.logo-text span{color:var(--gold)}
+.pill{background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.25);color:var(--gold);font-size:.62rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;border-radius:99px;margin-left:4px}
+h1{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:700;color:var(--white);margin-bottom:5px}
+.sub{color:rgba(255,255,255,.4);font-size:.86rem;margin-bottom:26px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:.78rem;font-weight:600;color:rgba(255,255,255,.55);margin-bottom:7px;letter-spacing:.03em}
+.iw{position:relative}
+.iw i.ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.25);font-size:.88rem;pointer-events:none}
+.iw input{width:100%;padding:12px 40px 12px 38px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:var(--white);font-size:.92rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
+.iw input::placeholder{color:rgba(255,255,255,.22)}
+.iw input:focus{border-color:var(--rose);background:rgba(255,255,255,.1)}
+.eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.28);cursor:pointer;font-size:.88rem;padding:3px;transition:color .2s}
+.eye:hover{color:var(--rose)}
+.err-box{display:none;align-items:center;gap:8px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.22);border-radius:9px;padding:10px 13px;color:#fca5a5;font-size:.82rem;margin-bottom:14px}
+.err-box.show{display:flex}
+.btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--rose-deep),var(--gold));color:var(--white);border:none;border-radius:10px;font-size:.93rem;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+.btn:hover:not(:disabled){opacity:.88}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.sp{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.btn.loading .sp{display:block}.btn.loading .lbl{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hint{text-align:center;margin-top:16px;color:rgba(255,255,255,.25);font-size:.78rem}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo-row">
+    <div class="logo-icon">&#x1FAA1;</div>
+    <div>
+      <span class="logo-text">KALY<span>.</span></span>
+      <span class="pill">Admin</span>
+    </div>
+  </div>
+  <h1>Espace Admin</h1>
+  <p class="sub">Entrez votre mot de passe administrateur</p>
+  <div class="err-box" id="err"><i class="fas fa-exclamation-circle"></i><span id="err-txt">Erreur</span></div>
+  <div class="field">
+    <label>Mot de passe</label>
+    <div class="iw">
+      <i class="ico fas fa-lock"></i>
+      <input type="password" id="pwd" placeholder="••••••••" autocomplete="current-password">
+      <button class="eye" type="button" id="eye"><i class="fas fa-eye" id="eye-icon"></i></button>
+    </div>
+  </div>
+  <button class="btn" id="btn">
+    <div class="sp"></div>
+    <span class="lbl"><i class="fas fa-sign-in-alt"></i> Connexion</span>
+  </button>
+  <p class="hint">Acces reserve aux administrateurs KALY</p>
+</div>
+<script>
+var API = 'https://kaly-backend.onrender.com/api';
+
+/* Eye toggle */
+document.getElementById('eye').addEventListener('click', function(){
+  var inp = document.getElementById('pwd');
+  var icon = document.getElementById('eye-icon');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  icon.className = inp.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+});
+
+/* Si deja connecte */
+if (localStorage.getItem('kaly_admin_password')) {
+  window.location.replace('dashboard.html');
+}
+
+function showErr(msg){
+  document.getElementById('err-txt').textContent = msg;
+  document.getElementById('err').classList.add('show');
+}
+function hideErr(){ document.getElementById('err').classList.remove('show'); }
+
+async function doLogin(){
+  var pwd = document.getElementById('pwd').value.trim();
+  var btn = document.getElementById('btn');
+  hideErr();
+  if(!pwd){ showErr('Entrez votre mot de passe'); return; }
+
+  btn.disabled = true; btn.classList.add('loading');
+
+  try {
+    /* Reveille le backend d'abord, puis verifie le mot de passe */
+    var controller = new AbortController();
+    var timeout = setTimeout(function(){ controller.abort(); }, 15000);
+
+    var res = await fetch(API + '/admin/stats', {
+      headers: { 'password': pwd },
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      localStorage.setItem('kaly_admin_password', pwd);
+      window.location.replace('dashboard.html');
+    } else if (res.status === 401) {
+      showErr('Mot de passe incorrect');
+    } else {
+      showErr('Erreur serveur (' + res.status + '). Reessayez.');
+    }
+  } catch(e) {
+    if (e.name === 'AbortError') {
+      showErr('Le serveur met trop de temps (cold start). Reessayez dans 30 secondes.');
+    } else {
+      showErr('Impossible de joindre le serveur. Verifiez votre connexion.');
+    }
+  } finally {
+    btn.disabled = false; btn.classList.remove('loading');
+  }
+}
+
+document.getElementById('btn').addEventListener('click', doLogin);
+document.getElementById('pwd').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') doLogin();
+});
+</script>
+</body>
+</html>

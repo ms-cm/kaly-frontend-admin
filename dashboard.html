@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — KALY Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --rose:#e8a0b0;--rose-deep:#c9687e;--gold:#c9a84c;
+  --dark:#1a1218;--mid:#2e2129;--sidebar-bg:#120e15;
+  --soft:#f7f1f3;--muted:#8a717a;--white:#fff;--green:#25D366;
+  --radius:12px;--sw:240px;--topbar:56px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--soft);color:var(--dark);min-height:100vh}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:300;height:var(--topbar);background:var(--sidebar-bg);border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.ham-btn{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;gap:5px;padding:4px}
+.ham-btn span{display:block;width:20px;height:2px;background:#fff;border-radius:2px}
+.logo-row{display:flex;align-items:center;gap:8px;text-decoration:none}
+.logo-icon{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--rose-deep),var(--gold));display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.logo-text{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:#fff}
+.logo-text span{color:var(--gold)}
+.admin-pill{background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.25);color:var(--gold);font-size:.62rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;border-radius:99px}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.page-label{color:rgba(255,255,255,.55);font-size:.84rem;font-weight:500}
+.logout-btn{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.2);color:#f87171;font-size:.78rem;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200}
+.sb-overlay.show{display:block}
+.sidebar{position:fixed;top:0;left:0;bottom:0;z-index:250;width:var(--sw);background:var(--sidebar-bg);display:flex;flex-direction:column;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);overflow-y:auto}
+.sidebar.open{transform:translateX(0)}
+.sb-head{display:flex;align-items:center;justify-content:space-between;padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.sb-close{background:none;border:none;color:rgba(255,255,255,.35);font-size:1rem;cursor:pointer;padding:4px}
+.sb-close:hover{color:#fff}
+.sb-nav{flex:1;padding:12px;display:flex;flex-direction:column;gap:3px}
+.nav-lbl{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:10px 12px 4px;margin-top:6px}
+.ni{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:10px;color:rgba(255,255,255,.55);font-size:.87rem;font-weight:500;text-decoration:none;cursor:pointer;border:none;background:none;width:100%;transition:all .15s;font-family:'DM Sans',sans-serif;text-align:left}
+.ni i{width:17px;text-align:center;font-size:.88rem;flex-shrink:0}
+.ni:hover{background:rgba(255,255,255,.06);color:#fff}
+.ni.active{background:rgba(232,160,176,.12);color:var(--rose);border:1px solid rgba(232,160,176,.18)}
+.ni.active i{color:var(--rose)}
+.sb-foot{padding:12px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.ni-logout{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:10px;color:#f87171;font-size:.87rem;font-weight:500;cursor:pointer;border:none;background:none;width:100%;font-family:'DM Sans',sans-serif;transition:background .15s}
+.ni-logout:hover{background:rgba(248,113,113,.1)}
+.main{margin-top:var(--topbar);min-height:calc(100vh - var(--topbar));padding:20px 16px 40px}
+.sec{display:none}.sec.active{display:block;animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.sec-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.sec-head h2{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.sc{background:var(--white);border-radius:var(--radius);padding:16px;border:1px solid rgba(0,0,0,.06);position:relative;overflow:hidden}
+.sc::after{content:'';position:absolute;top:-16px;right:-16px;width:60px;height:60px;border-radius:50%;opacity:.08}
+.sc.rose::after{background:var(--rose-deep)}.sc.gold::after{background:var(--gold)}.sc.green::after{background:#10b981}.sc.blue::after{background:#3b82f6}
+.si{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.9rem;margin-bottom:10px}
+.sc.rose .si{background:rgba(201,104,126,.1);color:var(--rose-deep)}.sc.gold .si{background:rgba(201,168,76,.1);color:var(--gold)}.sc.green .si{background:rgba(16,185,129,.1);color:#10b981}.sc.blue .si{background:rgba(59,130,246,.1);color:#3b82f6}
+.sn{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;color:var(--dark);line-height:1}
+.sl{font-size:.75rem;color:var(--muted);margin-top:3px}
+.card{background:var(--white);border-radius:var(--radius);border:1px solid rgba(0,0,0,.06);overflow:hidden;margin-bottom:16px}
+.card-head{padding:14px 16px;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.card-title{font-size:.9rem;font-weight:700}
+.ts{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;min-width:460px}
+thead th{padding:10px 14px;text-align:left;font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid rgba(0,0,0,.06);white-space:nowrap}
+tbody tr{transition:background .12s}
+tbody tr:hover{background:rgba(0,0,0,.02)}
+td{padding:11px 14px;font-size:.86rem;border-bottom:1px solid rgba(0,0,0,.04);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+.etd{text-align:center;padding:32px;color:var(--muted);font-size:.88rem}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:10px;font-size:.86rem;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .2s;white-space:nowrap}
+.bp{background:linear-gradient(135deg,var(--rose-deep),var(--gold));color:#fff}.bp:hover{opacity:.88}
+.bs{background:rgba(0,0,0,.06);color:var(--dark)}.bs:hover{background:rgba(0,0,0,.1)}
+.bsm{padding:7px 14px;font-size:.8rem}
+.badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:.7rem;font-weight:700}
+.br{background:rgba(201,104,126,.1);color:var(--rose-deep)}.bg{background:rgba(201,168,76,.1);color:#9a7500}
+.bgr{background:rgba(16,185,129,.1);color:#059669}.brd{background:rgba(239,68,68,.09);color:#dc2626}.bgy{background:rgba(0,0,0,.06);color:var(--muted)}
+.sb-bar{position:relative;margin-bottom:10px}
+.sb-bar i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.82rem;pointer-events:none}
+.sb-bar input{width:100%;padding:9px 12px 9px 32px;border:1.5px solid rgba(0,0,0,.1);border-radius:9px;font-size:.85rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
+.sb-bar input:focus{border-color:var(--rose-deep)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:9px;padding:12px 20px;border-radius:12px;color:#fff;font-size:.86rem;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:9999;white-space:nowrap;animation:ti .3s ease}
+.toast.success{background:#10b981}.toast.error{background:#ef4444}
+@keyframes ti{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@media(min-width:900px){
+  .ham-btn{display:none}.sidebar{transform:translateX(0)}.sb-head .sb-close{display:none}
+  .main{margin-left:var(--sw)}.stats-grid{grid-template-columns:repeat(4,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="ham-btn" id="ham"><span></span><span></span><span></span></button>
+    <a href="index.html" class="logo-row">
+      <div class="logo-icon">&#x1FAA1;</div>
+      <span class="logo-text">KALY<span>.</span></span>
+    </a>
+    <span class="admin-pill">Admin</span>
+  </div>
+  <div class="topbar-right">
+    <span class="page-label" id="plabel">Dashboard</span>
+    <button class="logout-btn" onclick="logout()">Quitter</button>
+  </div>
+</div>
+
+<div class="sb-overlay" id="sbo"></div>
+<aside class="sidebar" id="sb">
+  <div class="sb-head">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="logo-icon">&#x1FAA1;</div>
+      <div><div class="logo-text" style="font-size:1.1rem">KALY<span>.</span></div><span class="admin-pill" style="font-size:.58rem">Admin</span></div>
+    </div>
+    <button class="sb-close" id="sbclose"><i class="fas fa-times"></i></button>
+  </div>
+  <nav class="sb-nav">
+    <span class="nav-lbl">Tableau de bord</span>
+    <button class="ni active" id="n-dash" onclick="go('dash')"><i class="fas fa-chart-pie"></i> Dashboard</button>
+    <span class="nav-lbl">Catalogue</span>
+    <button class="ni" id="n-prods" onclick="go('prods')"><i class="fas fa-box"></i> Produits</button>
+    <button class="ni" id="n-add" onclick="go('add')"><i class="fas fa-plus-circle"></i> Ajouter produit</button>
+    <span class="nav-lbl">Marketing</span>
+    <button class="ni" id="n-promos" onclick="go('promos')"><i class="fas fa-tag"></i> Codes Promo</button>
+    <span class="nav-lbl">Clients</span>
+    <button class="ni" id="n-users" onclick="go('users')"><i class="fas fa-users"></i> Clients</button>
+    <span class="nav-lbl">Site</span>
+    <a class="ni" href="https://kaly-frontend-public.onrender.com" target="_blank"><i class="fas fa-external-link-alt"></i> Voir le Site</a>
+  </nav>
+  <div class="sb-foot">
+    <button class="ni-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Deconnexion</button>
+  </div>
+</aside>
+
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <div class="sec active" id="sec-dash">
+    <div class="sec-head"><h2>Tableau de bord</h2><button class="btn bs bsm" onclick="loadDash()"><i class="fas fa-sync-alt"></i> Actualiser</button></div>
+    <div class="stats-grid">
+      <div class="sc rose"><div class="si"><i class="fas fa-box"></i></div><div class="sn" id="s-p">—</div><div class="sl">Produits</div></div>
+      <div class="sc gold"><div class="si"><i class="fas fa-users"></i></div><div class="sn" id="s-u">—</div><div class="sl">Clients</div></div>
+      <div class="sc green"><div class="si"><i class="fas fa-tag"></i></div><div class="sn" id="s-pr">—</div><div class="sl">Promos actives</div></div>
+      <div class="sc blue"><div class="si"><i class="fas fa-star"></i></div><div class="sn" id="s-f">—</div><div class="sl">Vedettes</div></div>
+    </div>
+    <div style="display:grid;gap:14px">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Stock faible <span class="badge brd" id="s-l">—</span></span></div>
+        <div class="ts"><table><thead><tr><th>Produit</th><th>Categorie</th><th>Stock</th></tr></thead><tbody id="tb-low"><tr><td class="etd" colspan="3">Chargement...</td></tr></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Par categorie</span></div>
+        <div class="ts"><table><thead><tr><th>Categorie</th><th>Nb produits</th></tr></thead><tbody id="tb-cats"><tr><td class="etd" colspan="2">Chargement...</td></tr></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUITS -->
+  <div class="sec" id="sec-prods">
+    <div class="sec-head"><h2>Produits</h2><button class="btn bp bsm" onclick="go('add')"><i class="fas fa-plus"></i> Ajouter</button></div>
+    <div class="card">
+      <div class="card-head" style="flex-direction:column;align-items:stretch;gap:10px">
+        <div class="sb-bar"><i class="fas fa-search"></i><input type="text" id="ps" placeholder="Rechercher..." oninput="fprod()"></div>
+        <select id="cf" onchange="fprod()" style="padding:9px 12px;border:1.5px solid rgba(0,0,0,.1);border-radius:9px;font-size:.85rem;font-family:'DM Sans',sans-serif;outline:none;background:#fff">
+          <option value="">Toutes categories</option>
+          <option value="vetements">Vetements</option><option value="sacs">Sacs</option>
+          <option value="chaussures">Chaussures</option><option value="accessoires">Accessoires</option>
+        </select>
+      </div>
+      <div class="ts"><table>
+        <thead><tr><th>Img</th><th>Nom</th><th>Cat.</th><th>Prix</th><th>Stock</th><th>Vedette</th><th>Actions</th></tr></thead>
+        <tbody id="tb-prods"><tr><td class="etd" colspan="7">Chargement...</td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- AJOUTER PRODUIT -->
+  <div class="sec" id="sec-add">
+    <div class="sec-head">
+      <h2>Ajouter un produit</h2>
+      <button class="btn bs bsm" onclick="go('prods')"><i class="fas fa-arrow-left"></i> Retour</button>
+    </div>
+    <div class="card" style="padding:20px">
+      <form id="pf">
+        <div style="display:grid;gap:12px">
+          <div><label>Nom *</label><input type="text" id="fn" required></div>
+          <div><label>Categorie *</label><select id="fc" required><option>Vetements</option><option>Sacs</option><option>Chaussures</option><option>Accessoires</option></select></div>
+          <div><label>Prix (FCFA) *</label><input type="number" id="fp" required min="0"></div>
+          <div><label>Stock *</label><input type="number" id="fst" required min="0"></div>
+          <div><label>Description</label><textarea id="fd" style="padding:10px 13px;border:1.5px solid rgba(0,0,0,.1);border-radius:9px;font-size:.88rem;font-family:'DM Sans',sans-serif;outline:none;resize:vertical;min-height:80px"></textarea></div>
+          <div><label>Vedette?</label><input type="checkbox" id="ff"></div>
+          <button type="submit" class="btn bp"><i class="fas fa-save"></i> Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CODES PROMO -->
+  <div class="sec" id="sec-promos">
+    <div class="sec-head"><h2>Codes Promo</h2></div>
+    <div class="card" style="padding:20px">
+      <form id="promofrm" style="display:grid;gap:12px;margin-bottom:20px">
+        <div><label>Code promo *</label><input type="text" id="pcode" placeholder="ETE2024" required></div>
+        <div><label>Reduction (%) *</label><input type="number" id="pdis" placeholder="20" required min="0" max="100"></div>
+        <div><label>Date expiration</label><input type="date" id="pexp"></div>
+        <button type="submit" class="btn bp"><i class="fas fa-plus"></i> Creer</button>
+      </form>
+      <div class="ts"><table>
+        <thead><tr><th>Code</th><th>Reduction</th><th>Expiration</th><th>Actif</th><th>Actions</th></tr></thead>
+        <tbody id="tb-promos"><tr><td class="etd" colspan="5">Chargement...</td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- CLIENTS -->
+  <div class="sec" id="sec-users">
+    <div class="sec-head"><h2>Clients</h2></div>
+    <div class="card">
+      <div class="ts"><table>
+        <thead><tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody id="tb-users"><tr><td class="etd" colspan="5">Chargement...</td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+</main>
+
+<script src="admin.js"></script>
+<script>
+const API = 'https://kaly-backend.onrender.com/api';
+let pwd = localStorage.getItem('kaly_admin_password');
+
+if (!pwd) window.location.href = 'index.html';
+
+function go(s) {
+  document.querySelectorAll('.sec').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(x => x.classList.remove('active'));
+  document.getElementById('sec-' + s).classList.add('active');
+  document.getElementById('n-' + s).classList.add('active');
+  const labels = {dash:'Dashboard', prods:'Produits', add:'Ajouter produit', promos:'Codes Promo', users:'Clients'};
+  document.getElementById('plabel').textContent = labels[s] || 'Admin';
+  if (s === 'dash') loadDash();
+  if (s === 'prods') loadProds();
+  if (s === 'users') loadUsers();
+  if (s === 'promos') loadPromos();
+}
+
+async function loadDash() {
+  try {
+    const r = await fetch(API + '/admin/stats', {headers: {'password': pwd}});
+    if (!r.ok) throw new Error('Not auth');
+    const d = await r.json();
+    document.getElementById('s-p').textContent = d.totalProducts || 0;
+    document.getElementById('s-u').textContent = d.totalUsers || 0;
+    document.getElementById('s-pr').textContent = d.totalPromos || 0;
+    document.getElementById('s-f').textContent = d.featured || 0;
+    
+    const prods = await (await fetch(API + '/products', {headers: {'password': pwd}})).json();
+    const low = prods.filter(p => p.stock <= 5);
+    document.getElementById('s-l').textContent = low.length;
+    document.getElementById('tb-low').innerHTML = low.length === 0 ? '<tr><td class="etd" colspan="3">Aucun stock faible</td></tr>' : low.map(p => `<tr><td>${p.name}</td><td>${p.category}</td><td><span class="badge brd">${p.stock}</span></td></tr>`).join('');
+    
+    const cats = {};
+    prods.forEach(p => cats[p.category] = (cats[p.category] || 0) + 1);
+    document.getElementById('tb-cats').innerHTML = Object.entries(cats).map(([c,n]) => `<tr><td>${c}</td><td>${n}</td></tr>`).join('');
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function loadProds() {
+  try {
+    const r = await fetch(API + '/products', {headers: {'password': pwd}});
+    const prods = await r.json();
+    document.getElementById('tb-prods').innerHTML = prods.length === 0 ? '<tr><td class="etd" colspan="7">Aucun produit</td></tr>' : prods.map(p => `
+      <tr>
+        <td><img src="${p.images?.[0]||'https://via.placeholder.com/40'}" style="width:40px;height:40px;border-radius:6px;object-fit:cover"></td>
+        <td>${p.name}</td>
+        <td>${p.category}</td>
+        <td>${p.price.toLocaleString()} FCFA</td>
+        <td><span class="badge ${p.stock > 0 ? 'bgr' : 'brd'}">${p.stock}</span></td>
+        <td>${p.featured ? '<i class="fas fa-star" style="color:gold"></i>' : '—'}</td>
+        <td><button class="btn bs bsm" onclick="delProd('${p._id}')"><i class="fas fa-trash"></i></button></td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function delProd(id) {
+  if (!confirm('Supprimer?')) return;
+  try {
+    await fetch(API + '/products/' + id, {method:'DELETE', headers: {'password': pwd}});
+    toast('✓ Produit supprime', 'success');
+    loadProds();
+  } catch (e) {
+    toast('❌ Erreur', 'error');
+  }
+}
+
+document.getElementById('pf').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const data = {
+      name: document.getElementById('fn').value,
+      category: document.getElementById('fc').value,
+      price: parseFloat(document.getElementById('fp').value),
+      stock: parseInt(document.getElementById('fst').value),
+      description: document.getElementById('fd').value,
+      featured: document.getElementById('ff').checked,
+      images: ['https://via.placeholder.com/300']
+    };
+    const r = await fetch(API + '/products', {
+      method: 'POST',
+      headers: {'password': pwd, 'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    if (r.ok) {
+      toast('✓ Produit cree', 'success');
+      document.getElementById('pf').reset();
+      setTimeout(() => go('prods'), 1000);
+    }
+  } catch (e) {
+    toast('❌ Erreur', 'error');
+  }
+});
+
+async function loadPromos() {
+  try {
+    const r = await fetch(API + '/promos', {headers: {'password': pwd}});
+    const promos = await r.json();
+    document.getElementById('tb-promos').innerHTML = promos.length === 0 ? '<tr><td class="etd" colspan="5">Aucun code promo</td></tr>' : promos.map(p => `
+      <tr>
+        <td><strong>${p.code}</strong></td>
+        <td>${p.discount}%</td>
+        <td>${p.expiresAt ? new Date(p.expiresAt).toLocaleDateString('fr-FR') : '—'}</td>
+        <td><span class="badge ${p.active ? 'bgr' : 'bgy'}">${p.active ? 'Actif' : 'Inactif'}</span></td>
+        <td><button class="btn bs bsm" onclick="delPromo('${p._id}')"><i class="fas fa-trash"></i></button></td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+document.getElementById('promofrm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const data = {
+      code: document.getElementById('pcode').value.toUpperCase(),
+      discount: parseInt(document.getElementById('pdis').value),
+      expiresAt: document.getElementById('pexp').value || null
+    };
+    const r = await fetch(API + '/promo', {
+      method: 'POST',
+      headers: {'password': pwd, 'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    if (r.ok) {
+      toast('✓ Code promo cree', 'success');
+      document.getElementById('promofrm').reset();
+      loadPromos();
+    }
+  } catch (e) {
+    toast('❌ Erreur', 'error');
+  }
+});
+
+async function delPromo(id) {
+  if (!confirm('Supprimer ce code promo?')) return;
+  try {
+    await fetch(API + '/promo/' + id, {method:'DELETE', headers: {'password': pwd}});
+    toast('✓ Code supprime', 'success');
+    loadPromos();
+  } catch (e) {
+    toast('❌ Erreur', 'error');
+  }
+}
+
+async function loadUsers() {
+  try {
+    const r = await fetch(API + '/admin/users', {headers: {'password': pwd}});
+    const users = await r.json();
+    document.getElementById('tb-users').innerHTML = users.length === 0 ? '<tr><td class="etd" colspan="5">Aucun client</td></tr>' : users.map(u => `
+      <tr>
+        <td>${u.fullName}</td>
+        <td>${u.email}</td>
+        <td>${u.phone || '—'}</td>
+        <td>${new Date(u.createdAt).toLocaleDateString('fr-FR')}</td>
+        <td><button class="btn bs bsm" onclick="delUser('${u._id}')"><i class="fas fa-trash"></i></button></td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function delUser(id) {
+  if (!confirm('Supprimer ce client?')) return;
+  try {
+    await fetch(API + '/admin/users/' + id, {method:'DELETE', headers: {'password': pwd}});
+    toast('✓ Client supprime', 'success');
+    loadUsers();
+  } catch (e) {
+    toast('❌ Erreur', 'error');
+  }
+}
+
+function fprod() {
+  // Filtre pour produits
+}
+
+function toast(msg, type) {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+document.getElementById('ham').addEventListener('click', () => document.getElementById('sb').classList.toggle('open'));
+document.getElementById('sbclose').addEventListener('click', () => document.getElementById('sb').classList.remove('open'));
+document.getElementById('sbo').addEventListener('click', () => document.getElementById('sb').classList.remove('open'));
+
+loadDash();
+</script>
+</body>
+</html>
