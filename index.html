@@ -81,10 +81,7 @@ document.getElementById('eye').addEventListener('click', function(){
   icon.className = inp.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
 });
 
-/* Si deja connecte */
-if (localStorage.getItem('kaly_admin_pwd')) {
-  window.location.replace('dashboard.html');
-}
+/* Auto-redirect desactive */
 
 function showErr(msg){
   document.getElementById('err-txt').textContent = msg;
