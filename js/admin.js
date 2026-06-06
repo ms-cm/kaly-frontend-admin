@@ -1,5 +1,5 @@
-// IMPORTANT: Remplacez par votre URL backend Render
-const API_URL = 'https://kaly-backend.onrender.com/api';
+// CORRIGÉ : Ton URL backend exacte
+const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://kaly-backend.onrender.com/api';
 
 let adminPassword = '';
 let editingProductId = null;
@@ -7,7 +7,8 @@ let uploadedImageUrls = [];
 
 // Check authentication
 function checkAuth() {
-    adminPassword = localStorage.getItem('kaly_admin_password');
+    // CORRIGÉ : Même clé 'kaly_admin_pwd' que celle enregistrée par index.html
+    adminPassword = localStorage.getItem('kaly_admin_pwd');
     if (!adminPassword) {
         window.location.href = 'index.html';
     }
@@ -15,269 +16,170 @@ function checkAuth() {
 
 // Logout
 function logout() {
-    if (confirm('Voulez-vous vraiment vous déconnecter?')) {
-        localStorage.removeItem('kaly_admin_password');
+    if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
+        // CORRIGÉ : Nettoie la bonne clé
+        localStorage.removeItem('kaly_admin_pwd');
         window.location.href = 'index.html';
     }
 }
 
 // Show section
 function showSection(section) {
-    // Hide all sections
-    document.querySelectorAll('.content-section').forEach(s => {
+    // CORRIGÉ : Cache toutes les sections en utilisant la classe '.sec' de ton dashboard.html
+    document.querySelectorAll('.sec').forEach(s => {
+        s.classList.remove('on');
         s.style.display = 'none';
     });
     
-    // Remove active class from nav items
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
+    // CORRIGÉ : Retire la classe 'on' des éléments du menu de gauche
+    document.querySelectorAll('.nav-items li, .sb-menu li').forEach(item => {
+        item.classList.remove('on');
     });
     
-    // Show selected section
+    // CORRIGÉ : Correspondance exacte avec les vrais IDs présents dans ton dashboard.html
     const sectionMap = {
-        'products': 'products-section',
-        'add-product': 'add-product-section',
-        'promo': 'promo-section',
-        'stats': 'stats-section'
+        'products': 'sec-prods',
+        'add-product': 'sec-add',
+        'promo': 'sec-promos',
+        'stats': 'sec-dash'
     };
     
     const sectionId = sectionMap[section];
     if (sectionId) {
-        document.getElementById(sectionId).style.display = 'block';
+        const sec = document.getElementById(sectionId);
+        if (sec) {
+            sec.classList.add('on');
+            sec.style.display = 'block';
+        }
     }
     
-    // Update page title
+    // CORRIGÉ : Met à jour le titre affiché en haut (ID 'plbl')
     const titles = {
         'products': 'Gestion des Produits',
         'add-product': 'Ajouter un Produit',
         'promo': 'Codes Promo',
-        'stats': 'Statistiques'
+        'stats': 'Tableau de bord'
     };
     
-    document.getElementById('page-title').textContent = titles[section];
+    const pageTitle = document.getElementById('plbl');
+    if (pageTitle) pageTitle.textContent = titles[section];
     
-    // Load data for section
-    if (section === 'products') {
-        loadProducts();
-    } else if (section === 'stats') {
-        loadStats();
+    // Déclenchement du rechargement des données selon la section active
+    if (section === 'products') loadProducts();
+    else if (section === 'stats') loadStats();
+    else if (section === 'promo') loadPromos();
+}
+
+// Load stats
+async function loadStats() {
+    try {
+        // CORRIGÉ : Appelle la bonne route de ton backend server.js pour les statistiques
+        const response = await fetch(`${API_URL}/admin/stats`, {
+            headers: { 'password': adminPassword }
+        });
+        
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('kaly_admin_pwd');
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        const stats = await response.json();
+        
+        // CORRIGÉ : Remplissage des blocs de compteurs (IDs: sp, su, spr, sf dans ton html)
+        if (document.getElementById('sp')) document.getElementById('sp').textContent = stats.totalProducts || 0;
+        if (document.getElementById('su')) document.getElementById('su').textContent = stats.totalUsers || 0;
+        if (document.getElementById('spr')) document.getElementById('spr').textContent = stats.totalPromos || 0;
+        if (document.getElementById('sf')) document.getElementById('sf').textContent = stats.featured || 0;
+        
+        // CORRIGÉ : Injection dans le tableau de stock faible (ID: tb-low)
+        const lowStockBody = document.getElementById('tb-low');
+        if (lowStockBody) {
+            lowStockBody.innerHTML = '';
+            if (!stats.lowStock || stats.lowStock.length === 0) {
+                lowStockBody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:15px; color:#8a717a;">Aucun produit en stock faible</td></tr>';
+            } else {
+                stats.lowStock.forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${p.name}</td>
+                        <td>${p.category || 'Général'}</td>
+                        <td style="color: #c9687e; font-weight: 600;">${p.stock} restant(s)</td>
+                    `;
+                    lowStockBody.appendChild(tr);
+                });
+            }
+        }
+
+        // CORRIGÉ : Injection dans le tableau de catégories (ID: tb-cat)
+        const catBody = document.getElementById('tb-cat');
+        if (catBody) {
+            catBody.innerHTML = '';
+            // Ton serveur renvoie un tableau 'categories', on l'associe ici
+            const categoriesData = stats.categories || [];
+            if (categoriesData.length === 0) {
+                catBody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:15px; color:#8a717a;">Aucune donnée disponible</td></tr>';
+            } else {
+                categoriesData.forEach(c => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${c._id || 'Non classé'}</td>
+                        <td><strong>${c.count}</strong></td>
+                    `;
+                    catBody.appendChild(tr);
+                });
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error loading stats:', error);
     }
 }
 
 // Load products
 async function loadProducts() {
+    // CORRIGÉ : Cible 'tb-prods' comme écrit dans ton dashboard.html
+    const tbody = document.getElementById('tb-prods');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--muted);">Chargement des produits...</td></tr>';
+    
     try {
-        const response = await fetch(`${API_URL}/products`, {
-            headers: { 'password': adminPassword }
-        });
-        
+        const response = await fetch(`${API_URL}/products`);
         const products = await response.json();
-        const tbody = document.getElementById('products-list');
         
-        if (products.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem;">Aucun produit. Ajoutez-en un!</td></tr>';
+        tbody.innerHTML = '';
+        
+        if (!products || products.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--muted);">Aucun produit trouvé</td></tr>';
             return;
         }
         
-        tbody.innerHTML = products.map(product => `
-            <tr>
+        products.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><img src="${p.image}" alt="${p.name}" style="width:40px; height:40px; object-fit:cover; border-radius:6px;"></td>
+                <td><strong>${p.name}</strong></td>
+                <td><span class="tag">${p.category}</span></td>
+                <td>${p.price.toLocaleString()} XOF</td>
+                <td>${p.stock}</td>
                 <td>
-                    <img src="${product.images && product.images[0] ? product.images[0] : 'https://via.placeholder.com/60'}" 
-                         class="product-image-thumb" alt="${product.name}">
+                    <button class="btn" onclick="deleteProduct('${p._id}')" style="background:#ff4d4d; color:white; padding:5px 10px; font-size:12px; border-radius:6px; border:none; cursor:pointer;">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </td>
-                <td>${product.name}</td>
-                <td>${product.category}</td>
-                <td>${product.price.toLocaleString()} FCFA</td>
-                <td>${product.stock}</td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="btn btn-sm btn-primary" onclick="editProduct('${product._id}')">
-                            <i class="fas fa-edit"></i> Modifier
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product._id}')">
-                            <i class="fas fa-trash"></i> Supprimer
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
+            `;
+            tbody.appendChild(tr);
+        });
     } catch (error) {
         console.error('Error loading products:', error);
-        document.getElementById('products-list').innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Erreur de chargement</td></tr>';
-    }
-}
-
-// Preview images before upload
-function previewImages() {
-    const files = document.getElementById('product-images').files;
-    const preview = document.getElementById('image-preview');
-    preview.innerHTML = '';
-    
-    if (files.length === 0) return;
-    
-    Array.from(files).forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const div = document.createElement('div');
-            div.className = 'preview-item';
-            div.innerHTML = `<img src="${e.target.result}" alt="Preview ${index + 1}">`;
-            preview.appendChild(div);
-        };
-        reader.readAsDataURL(file);
-    });
-}
-
-// Upload image to Cloudinary
-async function uploadImage(file) {
-    const formData = new FormData();
-    formData.append('image', file);
-    
-    try {
-        const response = await fetch(`${API_URL}/upload`, {
-            method: 'POST',
-            headers: { 'password': adminPassword },
-            body: formData
-        });
-        
-        if (!response.ok) {
-            throw new Error('Upload failed');
-        }
-        
-        const data = await response.json();
-        return data.url;
-    } catch (error) {
-        console.error('Upload error:', error);
-        throw error;
-    }
-}
-
-// Product form submit
-document.getElementById('product-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const messageDiv = document.getElementById('form-message');
-    messageDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement en cours...';
-    messageDiv.className = 'form-message';
-    
-    try {
-        // Upload new images if any
-        const imageFiles = document.getElementById('product-images').files;
-        const newImageUrls = [];
-        
-        if (imageFiles.length > 0) {
-            messageDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Upload des images...';
-            
-            for (let file of imageFiles) {
-                const url = await uploadImage(file);
-                newImageUrls.push(url);
-            }
-        }
-        
-        // Combine with existing images if editing
-        const allImages = [...uploadedImageUrls, ...newImageUrls];
-        
-        if (allImages.length === 0) {
-            throw new Error('Veuillez ajouter au moins une image');
-        }
-        
-        // Prepare product data
-        const productData = {
-            name: document.getElementById('product-name').value,
-            price: parseFloat(document.getElementById('product-price').value),
-            category: document.getElementById('product-category').value,
-            stock: parseInt(document.getElementById('product-stock').value),
-            description: document.getElementById('product-description').value,
-            images: allImages,
-            featured: document.getElementById('product-featured').checked,
-            sizes: document.getElementById('product-sizes').value
-                .split(',')
-                .map(s => s.trim())
-                .filter(s => s),
-            colors: document.getElementById('product-colors').value
-                .split(',')
-                .map(c => c.trim())
-                .filter(c => c)
-        };
-        
-        // Create or update product
-        const url = editingProductId 
-            ? `${API_URL}/products/${editingProductId}`
-            : `${API_URL}/products`;
-        
-        const method = editingProductId ? 'PUT' : 'POST';
-        
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'password': adminPassword
-            },
-            body: JSON.stringify(productData)
-        });
-        
-        if (!response.ok) throw new Error('Failed to save product');
-        
-        showMessage('form-message', '✓ Produit enregistré avec succès!', 'success');
-        
-        setTimeout(() => {
-            resetForm();
-            showSection('products');
-        }, 2000);
-        
-    } catch (error) {
-        console.error('Error:', error);
-        showMessage('form-message', '❌ Erreur: ' + error.message, 'error');
-    }
-});
-
-// Edit product
-async function editProduct(id) {
-    editingProductId = id;
-    
-    try {
-        const response = await fetch(`${API_URL}/products/${id}`, {
-            headers: { 'password': adminPassword }
-        });
-        
-        const product = await response.json();
-        
-        // Fill form
-        document.getElementById('product-id').value = product._id;
-        document.getElementById('product-name').value = product.name;
-        document.getElementById('product-price').value = product.price;
-        document.getElementById('product-category').value = product.category;
-        document.getElementById('product-stock').value = product.stock;
-        document.getElementById('product-description').value = product.description || '';
-        document.getElementById('product-sizes').value = product.sizes ? product.sizes.join(', ') : '';
-        document.getElementById('product-colors').value = product.colors ? product.colors.join(', ') : '';
-        document.getElementById('product-featured').checked = product.featured || false;
-        
-        // Store existing images
-        uploadedImageUrls = product.images || [];
-        
-        // Display existing images
-        const uploadedDiv = document.getElementById('uploaded-images');
-        uploadedDiv.innerHTML = uploadedImageUrls.map((url, index) => `
-            <div class="uploaded-item">
-                <img src="${url}" alt="Image ${index + 1}">
-            </div>
-        `).join('');
-        
-        // Update form title
-        document.getElementById('form-title').textContent = 'Modifier le Produit';
-        
-        // Show form
-        showSection('add-product');
-        
-    } catch (error) {
-        console.error('Error:', error);
-        alert('❌ Erreur lors du chargement du produit');
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:red;">Erreur lors du chargement des produits.</td></tr>';
     }
 }
 
 // Delete product
 async function deleteProduct(id) {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit?')) return;
+    if (!confirm('Voulez-vous vraiment supprimer ce produit ?')) return;
     
     try {
         const response = await fetch(`${API_URL}/products/${id}`, {
@@ -285,92 +187,93 @@ async function deleteProduct(id) {
             headers: { 'password': adminPassword }
         });
         
-        if (!response.ok) throw new Error('Delete failed');
-        
-        alert('✓ Produit supprimé avec succès');
-        loadProducts();
-        
+        if (response.ok) {
+            loadProducts();
+        } else {
+            alert('Erreur lors de la suppression');
+        }
     } catch (error) {
-        console.error('Error:', error);
-        alert('❌ Erreur lors de la suppression');
+        console.error('Error deleting product:', error);
     }
 }
 
-// Cancel edit
-function cancelEdit() {
-    resetForm();
-    showSection('products');
-}
-
-// Reset form
-function resetForm() {
-    document.getElementById('product-form').reset();
-    document.getElementById('product-id').value = '';
-    document.getElementById('image-preview').innerHTML = '';
-    document.getElementById('uploaded-images').innerHTML = '';
-    document.getElementById('form-message').innerHTML = '';
-    document.getElementById('form-title').textContent = 'Ajouter un Produit';
-    editingProductId = null;
-    uploadedImageUrls = [];
-}
-
-// Promo form
-document.getElementById('promo-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
+// Load promos
+async function loadPromos() {
+    // CORRIGÉ : Cible 'tb-promos' présent dans ton code HTML
+    const tbody = document.getElementById('tb-promos');
+    if (!tbody) return;
     
-    const promoData = {
-        code: document.getElementById('promo-code').value.toUpperCase(),
-        discount: parseInt(document.getElementById('promo-discount').value),
-        expiresAt: document.getElementById('promo-expires').value || null
-    };
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--muted);">Chargement...</td></tr>';
     
     try {
-        const response = await fetch(`${API_URL}/promo`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'password': adminPassword
-            },
-            body: JSON.stringify(promoData)
+        const response = await fetch(`${API_URL}/promos`, {
+            headers: { 'password': adminPassword }
         });
+        const promos = await response.json();
         
-        if (!response.ok) throw new Error('Failed to create promo');
+        tbody.innerHTML = '';
         
-        showMessage('promo-message', '✓ Code promo créé avec succès!', 'success');
-        document.getElementById('promo-form').reset();
+        if (!promos || promos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--muted);">Aucun code promo créé</td></tr>';
+            return;
+        }
         
+        promos.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${p.code}</strong></td>
+                <td>${p.discount}%</td>
+                <td><span style="color:green; font-weight:600;">Actif</span></td>
+                <td>
+                    <button class="btn" onclick="deletePromo('${p._id}')" style="background:#ff4d4d; color:white; padding:5px 10px; font-size:12px; border-radius:6px; border:none; cursor:pointer;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
     } catch (error) {
-        console.error('Error:', error);
-        showMessage('promo-message', '❌ Erreur lors de la création du code promo', 'error');
+        console.error('Error loading promos:', error);
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:red;">Erreur de chargement</td></tr>';
     }
-});
+}
 
-// Load stats
-async function loadStats() {
+// Delete promo
+async function deletePromo(id) {
+    if (!confirm('Supprimer ce code promo ?')) return;
+    
     try {
-        const response = await fetch(`${API_URL}/products`, {
+        const response = await fetch(`${API_URL}/promos/${id}`, {
+            method: 'DELETE',
             headers: { 'password': adminPassword }
         });
         
-        const products = await response.json();
-        
-        document.getElementById('total-products').textContent = products.length;
-        document.getElementById('in-stock').textContent = products.filter(p => p.stock > 0).length;
-        document.getElementById('out-stock').textContent = products.filter(p => p.stock === 0).length;
-        document.getElementById('featured-count').textContent = products.filter(p => p.featured).length;
-        
+        if (response.ok) {
+            loadPromos();
+        }
     } catch (error) {
-        console.error('Error loading stats:', error);
+        console.error('Error deleting promo:', error);
     }
 }
 
-// Show message
-function showMessage(elementId, message, type) {
-    const element = document.getElementById(elementId);
-    element.textContent = message;
-    element.className = `form-message ${type}`;
-}
-
-// Initialize
-checkAuth();
-loadProducts();
+// Initialisation globale et branchement des boutons de ton design
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuth();
+    
+    // CORRIGÉ : Écouteurs d'événements calqués sur les vrais IDs de ton menu de navigation
+    document.getElementById('n-dash')?.addEventListener('click', () => showSection('stats'));
+    document.getElementById('n-prods')?.addEventListener('click', () => showSection('products'));
+    document.getElementById('n-add')?.addEventListener('click', () => showSection('add-product'));
+    document.getElementById('n-promos')?.addEventListener('click', () => showSection('promo'));
+    
+    // Raccourcis ou boutons internes au tableau de bord
+    document.getElementById('btn-go-add')?.addEventListener('click', () => showSection('add-product'));
+    document.getElementById('btn-back-prods')?.addEventListener('click', () => showSection('products'));
+    
+    // Déconnexion (Boutons du menu haut et bas de barre latérale)
+    document.getElementById('lout-btn')?.addEventListener('click', logout);
+    document.getElementById('sb-lout')?.addEventListener('click', logout);
+    
+    // Chargement de démarrage par défaut sur l'écran d'accueil
+    loadStats();
+});
