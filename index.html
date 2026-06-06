@@ -82,7 +82,7 @@ document.getElementById('eye').addEventListener('click', function(){
 });
 
 /* Si deja connecte */
-if (localStorage.getItem('kaly_admin_password')) {
+if (localStorage.getItem('kaly_admin_pwd')) {
   window.location.replace('dashboard.html');
 }
 
@@ -112,7 +112,7 @@ async function doLogin(){
     clearTimeout(timeout);
 
     if (res.ok) {
-      localStorage.setItem('kaly_admin_password', pwd);
+      localStorage.setItem('kaly_admin_pwd', pwd);
       window.location.replace('dashboard.html');
     } else if (res.status === 401) {
       showErr('Mot de passe incorrect');
