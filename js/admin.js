@@ -4,7 +4,6 @@ let adminPassword = '';
 
 // Check authentication
 function checkAuth() {
-    // Utilise la clé exacte enregistrée par index.html
     adminPassword = localStorage.getItem('kaly_admin_pwd');
     if (!adminPassword) {
         window.location.href = 'index.html';
@@ -21,18 +20,17 @@ function logout() {
 
 // Show section
 function showSection(section) {
-    // Masquer toutes les sections (classe .sec dans ton dashboard.html)
+    // Cache toutes les sections (.sec)
     document.querySelectorAll('.sec').forEach(s => {
         s.classList.remove('on');
         s.style.display = 'none';
     });
     
-    // Retirer l'état actif du menu latéral
+    // Enlève l'état actif du menu
     document.querySelectorAll('.nav-items li, .sb-menu li').forEach(item => {
         item.classList.remove('on');
     });
     
-    // Correspondance exacte avec les IDs de ton dashboard.html
     const sectionMap = {
         'products': 'sec-prods',
         'add-product': 'sec-add',
@@ -49,7 +47,7 @@ function showSection(section) {
         }
     }
     
-    // Mettre à jour le titre principal (ID plbl)
+    // Met à jour le titre principal (ID 'plbl')
     const titles = {
         'products': 'Gestion des Produits',
         'add-product': 'Ajouter un Produit',
@@ -69,7 +67,6 @@ function showSection(section) {
 // Load stats
 async function loadStats() {
     try {
-        // Route exacte présente dans ton server.js
         const response = await fetch(`${API_URL}/admin/stats`, {
             headers: { 'password': adminPassword }
         });
@@ -82,19 +79,18 @@ async function loadStats() {
         
         const stats = await response.json();
         
-        // Mise à jour des compteurs (IDs: sp, su, spr, sf)
+        // Mise à jour des compteurs (sp, su, spr, sf)
         if (document.getElementById('sp')) document.getElementById('sp').textContent = stats.totalProducts || 0;
         if (document.getElementById('su')) document.getElementById('su').textContent = stats.totalUsers || 0;
         if (document.getElementById('spr')) document.getElementById('spr').textContent = stats.totalPromos || 0;
         if (document.getElementById('sf')) document.getElementById('sf').textContent = stats.featured || 0;
         
-        // Tableau Stock Faible (ID: tb-low)
+        // Tableau Stock Faible (tb-low)
         const lowStockBody = document.getElementById('tb-low');
         if (lowStockBody) {
             lowStockBody.innerHTML = '';
-            // Si ton serveur renvoie un nombre ou si la liste est vide
             if (!stats.lowStockList || stats.lowStockList.length === 0) {
-                lowStockBody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:var(--muted);">Aucun produit (ou stock faible général : ${stats.lowStock || 0})</td></tr>`;
+                lowStockBody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:var(--muted);">Aucun produit en stock faible (${stats.lowStock || 0})</td></tr>`;
             } else {
                 stats.lowStockList.forEach(p => {
                     const tr = document.createElement('tr');
@@ -108,7 +104,7 @@ async function loadStats() {
             }
         }
 
-        // Tableau Catégories (ID: tb-cat)
+        // Tableau Catégories (tb-cat)
         const catBody = document.getElementById('tb-cat');
         if (catBody) {
             catBody.innerHTML = '';
@@ -250,28 +246,78 @@ async function deletePromo(id) {
     }
 }
 
-// Initialisation au chargement du DOM
+// Actions pour la soumission d'un produit (Bouton Sauvegarder de ton HTML)
+async function handleSaveProduct() {
+    const nameEl = document.getElementById('f-name');
+    const priceEl = document.getElementById('f-price');
+    const stockEl = document.getElementById('f-stock');
+    const catEl = document.getElementById('f-cat');
+    const descEl = document.getElementById('f-desc');
+    const featEl = document.getElementById('f-featured');
+    
+    if(!nameEl || !priceEl) return;
+
+    const formData = {
+        name: nameEl.value,
+        price: Number(priceEl.value),
+        category: catEl ? catEl.value : 'Général',
+        stock: stockEl ? Number(stockEl.value) : 0,
+        description: descEl ? descEl.value : '',
+        image: 'https://via.placeholder.com/150', // Valeur temporaire si pas d'image chargée
+        featured: featEl ? featEl.checked : false
+    };
+    
+    try {
+        const response = await fetch(`${API_URL}/products`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'password': adminPassword
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (response.ok) {
+            alert('Produit enregistré avec succès !');
+            showSection('products');
+        } else {
+            alert('Erreur lors de la sauvegarde du produit');
+        }
+    } catch (error) {
+        console.error('Error saving product:', error);
+    }
+}
+
+// Initialisation globale
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     
-    // Branchement des boutons du menu latéral (dashboard.html)
+    // Branchement de ta barre de navigation (Desktop)
     document.getElementById('n-dash')?.addEventListener('click', () => showSection('stats'));
     document.getElementById('n-prods')?.addEventListener('click', () => showSection('products'));
     document.getElementById('n-add')?.addEventListener('click', () => showSection('add-product'));
     document.getElementById('n-promos')?.addEventListener('click', () => showSection('promo'));
     
-    // Bouton de rafraîchissement
-    document.getElementById('btn-refresh')?.addEventListener('click', () => loadStats());
+    // Liens du tiroir Mobile (Sidebar)
+    document.querySelector('.sb-menu li:nth-child(1)')?.addEventListener('click', () => showSection('stats'));
+    document.querySelector('.sb-menu li:nth-child(2)')?.addEventListener('click', () => showSection('products'));
+    document.querySelector('.sb-menu li:nth-child(3)')?.addEventListener('click', () => showSection('add-product'));
+    document.querySelector('.sb-menu li:nth-child(4)')?.addEventListener('click', () => showSection('promo'));
     
-    // Raccourcis internes
+    // Actions et boutons de raccourcis internes
+    document.getElementById('btn-refresh')?.addEventListener('click', () => loadStats());
     document.getElementById('btn-go-add')?.addEventListener('click', () => showSection('add-product'));
     document.getElementById('btn-back-prods')?.addEventListener('click', () => showSection('products'));
+    document.getElementById('btn-reset')?.addEventListener('click', () => showSection('products'));
     
-    // Actions de déconnexion
+    // Branchement du clic sur ton bouton "Sauvegarder" (ID btn-save)
+    document.getElementById('btn-save')?.addEventListener('click', handleSaveProduct);
+    
+    // Déconnexions
     document.getElementById('lout-btn')?.addEventListener('click', logout);
     document.getElementById('sb-lout')?.addEventListener('click', logout);
     
-    // Premier chargement de l'accueil
+    // Premier affichage
     loadStats();
 });
-        
+                        
