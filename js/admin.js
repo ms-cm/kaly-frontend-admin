@@ -1,11 +1,10 @@
-// Ton URL backend exacte
 const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://kaly-backend.onrender.com/api';
 
 let adminPassword = '';
 
 // Check authentication
 function checkAuth() {
-    // Même clé 'kaly_admin_pwd' que celle enregistrée par index.html
+    // Utilise la clé exacte enregistrée par index.html
     adminPassword = localStorage.getItem('kaly_admin_pwd');
     if (!adminPassword) {
         window.location.href = 'index.html';
@@ -22,13 +21,18 @@ function logout() {
 
 // Show section
 function showSection(section) {
-    // Cache toutes les sections en utilisant la classe '.sec' de ton dashboard.html
+    // Masquer toutes les sections (classe .sec dans ton dashboard.html)
     document.querySelectorAll('.sec').forEach(s => {
         s.classList.remove('on');
         s.style.display = 'none';
     });
     
-    // Correspondance exacte avec les vrais IDs présents dans ton dashboard.html
+    // Retirer l'état actif du menu latéral
+    document.querySelectorAll('.nav-items li, .sb-menu li').forEach(item => {
+        item.classList.remove('on');
+    });
+    
+    // Correspondance exacte avec les IDs de ton dashboard.html
     const sectionMap = {
         'products': 'sec-prods',
         'add-product': 'sec-add',
@@ -45,7 +49,7 @@ function showSection(section) {
         }
     }
     
-    // Met à jour le titre affiché en haut (ID 'plbl')
+    // Mettre à jour le titre principal (ID plbl)
     const titles = {
         'products': 'Gestion des Produits',
         'add-product': 'Ajouter un Produit',
@@ -56,7 +60,7 @@ function showSection(section) {
     const pageTitle = document.getElementById('plbl');
     if (pageTitle) pageTitle.textContent = titles[section];
     
-    // Déclenchement du rechargement des données selon la section active
+    // Charger les données de la section
     if (section === 'products') loadProducts();
     else if (section === 'stats') loadStats();
     else if (section === 'promo') loadPromos();
@@ -65,8 +69,8 @@ function showSection(section) {
 // Load stats
 async function loadStats() {
     try {
-        // CORRIGÉ : Utilise la route exacte définie dans ton server.js (/api/stats/admin)
-        const response = await fetch(`${API_URL}/stats/admin`, {
+        // Route exacte présente dans ton server.js
+        const response = await fetch(`${API_URL}/admin/stats`, {
             headers: { 'password': adminPassword }
         });
         
@@ -78,38 +82,39 @@ async function loadStats() {
         
         const stats = await response.json();
         
-        // Remplissage des blocs de compteurs (IDs: sp, su, spr, sf dans ton html)
+        // Mise à jour des compteurs (IDs: sp, su, spr, sf)
         if (document.getElementById('sp')) document.getElementById('sp').textContent = stats.totalProducts || 0;
         if (document.getElementById('su')) document.getElementById('su').textContent = stats.totalUsers || 0;
         if (document.getElementById('spr')) document.getElementById('spr').textContent = stats.totalPromos || 0;
         if (document.getElementById('sf')) document.getElementById('sf').textContent = stats.featured || 0;
         
-        // Injection dans le tableau de stock faible (ID: tb-low)
+        // Tableau Stock Faible (ID: tb-low)
         const lowStockBody = document.getElementById('tb-low');
         if (lowStockBody) {
             lowStockBody.innerHTML = '';
-            if (!stats.lowStock || stats.lowStock.length === 0) {
-                lowStockBody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:15px; color:#8a717a;">Aucun produit en stock faible</td></tr>';
+            // Si ton serveur renvoie un nombre ou si la liste est vide
+            if (!stats.lowStockList || stats.lowStockList.length === 0) {
+                lowStockBody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:var(--muted);">Aucun produit (ou stock faible général : ${stats.lowStock || 0})</td></tr>`;
             } else {
-                stats.lowStock.forEach(p => {
+                stats.lowStockList.forEach(p => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${p.name}</td>
                         <td>${p.category || 'Général'}</td>
-                        <td style="color: #c9687e; font-weight: 600;">${p.stock} restant(s)</td>
+                        <td style="color:var(--rose); font-weight:600;">${p.stock} restant(s)</td>
                     `;
                     lowStockBody.appendChild(tr);
                 });
             }
         }
 
-        // Injection dans le tableau de catégories (ID: tb-cat)
+        // Tableau Catégories (ID: tb-cat)
         const catBody = document.getElementById('tb-cat');
         if (catBody) {
             catBody.innerHTML = '';
             const categoriesData = stats.categories || [];
             if (categoriesData.length === 0) {
-                catBody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:15px; color:#8a717a;">Aucune donnée disponible</td></tr>';
+                catBody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:15px; color:var(--muted);">Aucune catégorie</td></tr>';
             } else {
                 categoriesData.forEach(c => {
                     const tr = document.createElement('tr');
@@ -132,7 +137,7 @@ async function loadProducts() {
     const tbody = document.getElementById('tb-prods');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--muted);">Chargement des produits...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--muted);">Chargement...</td></tr>';
     
     try {
         const response = await fetch(`${API_URL}/products`);
@@ -163,7 +168,7 @@ async function loadProducts() {
         });
     } catch (error) {
         console.error('Error loading products:', error);
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:red;">Erreur lors du chargement des produits.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:red;">Erreur de chargement</td></tr>';
     }
 }
 
@@ -203,7 +208,7 @@ async function loadPromos() {
         tbody.innerHTML = '';
         
         if (!promos || promos.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--muted);">Aucun code promo créé</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--muted);">Aucun code promo actif</td></tr>';
             return;
         }
         
@@ -245,27 +250,28 @@ async function deletePromo(id) {
     }
 }
 
-// Initialisation globale et branchement des boutons de ton design
+// Initialisation au chargement du DOM
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     
-    // Écouteurs d'événements liés aux IDs de ton menu de navigation (dashboard.html)
+    // Branchement des boutons du menu latéral (dashboard.html)
     document.getElementById('n-dash')?.addEventListener('click', () => showSection('stats'));
     document.getElementById('n-prods')?.addEventListener('click', () => showSection('products'));
     document.getElementById('n-add')?.addEventListener('click', () => showSection('add-product'));
     document.getElementById('n-promos')?.addEventListener('click', () => showSection('promo'));
     
-    // Branchement du bouton "Actualiser" présent en haut de ton tableau de bord
+    // Bouton de rafraîchissement
     document.getElementById('btn-refresh')?.addEventListener('click', () => loadStats());
     
-    // Raccourcis ou boutons internes au tableau de bord
+    // Raccourcis internes
     document.getElementById('btn-go-add')?.addEventListener('click', () => showSection('add-product'));
     document.getElementById('btn-back-prods')?.addEventListener('click', () => showSection('products'));
     
-    // Déconnexion (Boutons du menu haut et bas de barre latérale)
+    // Actions de déconnexion
     document.getElementById('lout-btn')?.addEventListener('click', logout);
     document.getElementById('sb-lout')?.addEventListener('click', logout);
     
-    // Chargement de démarrage par défaut sur l'écran d'accueil
+    // Premier chargement de l'accueil
     loadStats();
 });
+        
